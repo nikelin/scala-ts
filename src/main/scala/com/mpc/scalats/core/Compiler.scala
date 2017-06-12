@@ -18,7 +18,7 @@ object Compiler {
 
   private def compileInterface(scalaClass: ScalaModel.CaseClass)(implicit config: Config) = {
     TypeScriptModel.InterfaceDeclaration(
-      s"I${scalaClass.name}",
+      s"${scalaClass.name}",
       scalaClass.members map { scalaMember =>
         TypeScriptModel.Member(
           scalaMember.name,
@@ -63,7 +63,7 @@ object Compiler {
     case ScalaModel.SeqRef(innerType) =>
       TypeScriptModel.ArrayRef(compileTypeRef(innerType, inInterfaceContext))
     case ScalaModel.CaseClassRef(name, typeArgs) =>
-      val actualName = if (inInterfaceContext) s"I$name" else name
+      val actualName = if (inInterfaceContext) s"$name" else name
       TypeScriptModel.CustomTypeRef(actualName, typeArgs.map(compileTypeRef(_, inInterfaceContext)))
     case ScalaModel.DateRef =>
       TypeScriptModel.DateRef
@@ -71,6 +71,8 @@ object Compiler {
       TypeScriptModel.DateTimeRef
     case ScalaModel.TypeParamRef(name) =>
       TypeScriptModel.TypeParamRef(name)
+    case ScalaModel.OptionRef(innerType) if config.optionToArray =>
+      TypeScriptModel.ArrayRef(compileTypeRef(innerType, inInterfaceContext))
     case ScalaModel.OptionRef(innerType) if config.optionToNullable && config.optionToUndefined =>
       TypeScriptModel.UnionType(TypeScriptModel.UnionType(compileTypeRef(innerType, inInterfaceContext), NullRef), UndefinedRef)
     case ScalaModel.OptionRef(innerType) if config.optionToNullable =>

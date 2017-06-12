@@ -1,6 +1,6 @@
 package com.mpc.scalats.core
 
-import java.io.PrintStream
+import java.io._
 
 import com.mpc.scalats.core.TypeScriptModel.AccessModifier.{Private, Public}
 import com.mpc.scalats.core.TypeScriptModel.{DateRef, DateTimeRef}
@@ -9,16 +9,19 @@ object TypeScriptEmitter {
 
   import TypeScriptModel._
 
-  def emit(declaration: List[Declaration], out: PrintStream): Unit = {
+  def emit(declaration: List[Declaration], out: OutputStream): Unit = {
+    val writer = new PrintWriter(out)
     declaration foreach {
       case decl: InterfaceDeclaration =>
-        emitInterfaceDeclaration(decl, out)
+        emitInterfaceDeclaration(decl, writer)
       case decl: ClassDeclaration  =>
-        emitClassDeclaration(decl, out)
+        emitClassDeclaration(decl, writer)
     }
+    writer.flush()
+    writer.close()
   }
 
-  private def emitInterfaceDeclaration(decl: InterfaceDeclaration, out: PrintStream) = {
+  private def emitInterfaceDeclaration(decl: InterfaceDeclaration, out: PrintWriter) = {
     val InterfaceDeclaration(name, members, typeParams) = decl
     out.print(s"export interface $name")
     emitTypeParams(decl.typeParams, out)
@@ -30,7 +33,7 @@ object TypeScriptEmitter {
     out.println()
   }
 
-  private def emitClassDeclaration(decl: ClassDeclaration, out: PrintStream) = {
+  private def emitClassDeclaration(decl: ClassDeclaration, out: PrintWriter) = {
     val ClassDeclaration(name, ClassConstructor(parameters), typeParams) = decl
     out.print(s"export class $name")
     emitTypeParams(decl.typeParams, out)
@@ -50,7 +53,7 @@ object TypeScriptEmitter {
     out.println("}")
   }
 
-  private def emitTypeParams(params: List[String], out: PrintStream) =
+  private def emitTypeParams(params: List[String], out: PrintWriter) =
     if (params.nonEmpty) {
       out.print("<")
       out.print(params.mkString(", "))
